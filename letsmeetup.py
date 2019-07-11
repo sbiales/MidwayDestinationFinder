@@ -1,5 +1,6 @@
 import env
 import googlemaps, requests, json, time
+from datetime import datetime
 
 apiKey = env.API_KEY
 
@@ -42,6 +43,9 @@ def main():
     geo2 = (res['candidates'][0]['geometry']['location']['lat'], res['candidates'][0]['geometry']['location']['lng'])
 
     midpt = ((geo1[0] + geo2[0])/2, (geo1[1] + geo2[1])/2)
+
+    # Time the program
+    start = datetime.now()
     
     url = "https://maps.googleapis.com/maps/api/place/textsearch/json?"
     fullUrl = url + 'query=dinner&location=' + str(midpt[0]) + ',' + str(midpt[1]) + '&radius=16000&key=' + apiKey
@@ -49,7 +53,7 @@ def main():
     results = search['results']
 
     while 'next_page_token' in search:
-        time.sleep(1.5)
+        time.sleep(1.7)
         newUrl = fullUrl + '&pagetoken=' + search['next_page_token']
         search = requests.get(newUrl).json()
         if search['status'] == 'OK':
@@ -62,14 +66,16 @@ def main():
 
     #print(destinations)
     originstr = str(geo1[0]) + ',' + str(geo1[1]) + '|' + str(geo2[0]) + ',' + str(geo2[1])
-
+    sz = 25
+    dstChunks = [destinations[i * sz:(i + 1) * sz] for i in range((len(destinations) + sz - 1) // sz )]
     
-    deststr = '|'.join(destinations)
+    for chunk in dstChunks:
+        deststr = '|'.join(chunk)
+        mjson = getDistMatrix(originstr, deststr)
 
-    mjson = getDistMatrix(originstr, deststr)
-    print(mjson)
-
-    for i in range(len(mjson['destination_addresses'])):
-        times[mjson['destination_addresses'][i]] = (mjson['rows'][0]['elements'][i]['duration']['text'], mjson['rows'][1]['elements'][i]['duration']['text'])
+        for i in range(len(mjson['destination_addresses'])):
+            times[chunk[i]] = (mjson['rows'][0]['elements'][i]['duration']['text'], mjson['rows'][1]['elements'][i]['duration']['text'])
     print(times)
+    print(str(len(times)) + ' elements in times')
+    print('Time elapsed: ' + str(datetime.now()-start))
 main()
