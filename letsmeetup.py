@@ -12,6 +12,10 @@ def getDistMatrix(origins, destinations):
     mjson = matrix.json()
     return mjson
 
+def getRanks(times):
+    ranks = {k:(.4*(v[0]+v[1])/120 + .6*abs(v[0]-v[1])/60) for (k,v) in times.items()}
+    return ranks
+
 def main():
     ##result = gmaps.geolocate()
     ##latlong = 'point:' + str(result['location']['lat']) + ',' + str(result['location']['lng'])
@@ -42,6 +46,7 @@ def main():
     print(res['candidates'][0]['formatted_address'])
     geo2 = (res['candidates'][0]['geometry']['location']['lat'], res['candidates'][0]['geometry']['location']['lng'])
 
+    # Calculate the midpoint between the two locations
     midpt = ((geo1[0] + geo2[0])/2, (geo1[1] + geo2[1])/2)
 
     # Time the program
@@ -74,8 +79,18 @@ def main():
         mjson = getDistMatrix(originstr, deststr)
 
         for i in range(len(mjson['destination_addresses'])):
-            times[chunk[i]] = (mjson['rows'][0]['elements'][i]['duration']['text'], mjson['rows'][1]['elements'][i]['duration']['text'])
-    print(times)
-    print(str(len(times)) + ' elements in times')
+            times[chunk[i][9:]] = (mjson['rows'][0]['elements'][i]['duration']['value'], mjson['rows'][1]['elements'][i]['duration']['value'])
+    #print(times)
+    #print(str(len(times)) + ' elements in times')
+    ranks = getRanks(times)
+    for pid in sorted(ranks, key=ranks.get):
+        details = gmaps.place(pid, fields=['name', 'formatted_address'])
+        print(details['result']['name'])
+        print(details['result']['formatted_address'])
+        print(times[pid][0]/60)
+        print(times[pid][1]/60)
+        print()
+        #print(pid + ': ' + str(ranks[pid]))
+    
     print('Time elapsed: ' + str(datetime.now()-start))
 main()
