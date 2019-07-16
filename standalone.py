@@ -1,11 +1,6 @@
 import env
 import googlemaps, requests, json, time
 from datetime import datetime
-from flask import Flask, request
-from flask_cors import CORS, cross_origin
-
-app = Flask(__name__)
-cors = CORS(app)
 
 apiKey = env.API_KEY
 
@@ -21,19 +16,6 @@ def getRanks(times):
     ranks = {k:(.4*(v[0]+v[1])/120 + .6*abs(v[0]-v[1])/60) for (k,v) in times.items()}
     return ranks
 
-@app.route('/findLocation', methods=['GET'])
-def findLocation():
-    query = request.args.get('query')
-    latlong = request.args.get('latlong')
-    if not latlong:
-        latlong = 'point:41.3229056,-73.0988544'
-    res = gmaps.find_place(query, 'textquery',
-                        fields=['geometry', 'id', 'name', 'formatted_address'],
-                        location_bias=latlong)
-    if len(res['candidates']) == 0:
-        return json.dumps({})
-    return json.dumps(res['candidates'][0])
-
 def main():
     ##result = gmaps.geolocate()
     ##latlong = 'point:' + str(result['location']['lat']) + ',' + str(result['location']['lng'])
@@ -42,22 +24,27 @@ def main():
     latlong = 'point:41.3229056,-73.0988544'
     query1 = input("Enter the first location: ") 
 
-    #res = findLocation(query1, latlong)
+    res = gmaps.find_place(query1, 'textquery',
+                        fields=['geometry', 'id', 'name', 'formatted_address'],
+                        location_bias=latlong)
 
-    if not res:
+    if len(res['candidates']) == 0:
         print("Sorry, we couldn't find a match for that location...")
         return
-    print(res['formatted_address'])
-    geo1 = (res['geometry']['location']['lat'], res['geometry']['location']['lng'])
+    print(res['candidates'][0]['formatted_address'])
+    geo1 = (res['candidates'][0]['geometry']['location']['lat'], res['candidates'][0]['geometry']['location']['lng'])
     
     query2 = input("Enter the second location: ")
-    #res = findLocation(query2, latlong)
+    res = gmaps.find_place(query2, 'textquery',
+                        fields=['geometry', 'id', 'name', 'formatted_address'],
+                        location_bias=latlong)
+    
 
-    if not res:
+    if len(res['candidates']) == 0:
         print("Sorry, we couldn't find a match for that location...")
         return
-    print(res['formatted_address'])
-    geo2 = (res['geometry']['location']['lat'], res['geometry']['location']['lng'])
+    print(res['candidates'][0]['formatted_address'])
+    geo2 = (res['candidates'][0]['geometry']['location']['lat'], res['candidates'][0]['geometry']['location']['lng'])
 
     # Calculate the midpoint between the two locations
     midpt = ((geo1[0] + geo2[0])/2, (geo1[1] + geo2[1])/2)
@@ -108,4 +95,4 @@ def main():
         #print(pid + ': ' + str(ranks[pid]))
     
     print('Time elapsed: ' + str(datetime.now()-start))
-#main()
+main()
