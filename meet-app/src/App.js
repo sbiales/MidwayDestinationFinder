@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import LocationInput from './LocationInput';
+import MapContainer from './MapContainer';
 
 class App extends Component {
     constructor(props) {
@@ -20,15 +21,17 @@ class App extends Component {
                 placeid: '',
                 name: ''
             },
-            latlong: ''
+            lat: '',
+            long: ''
         };
         this.onLocationSubmit = this.onLocationSubmit.bind(this);
     }
 
     onLocationSubmit(q1, q2) {
         var o1, o2;
+        var latlong = (this.state.lat && this.state.long) ? 'point:' + this.state.lat + ',' + this.state.long : '';
         var url = 'http://127.0.0.1:5000/findLocation?query=' +
-            q1 + '&latlong=' + this.state.latlong;
+            q1 + '&latlong=' + latlong;
         fetch(url, {
             method: "GET",
             headers: {
@@ -52,7 +55,7 @@ class App extends Component {
             });
         });
         url = 'http://127.0.0.1:5000/findLocation?query=' +
-            q2 + '&latlong=' + this.state.latlong;
+            q2 + '&latlong=' + latlong;
         fetch(url, {
             method: "GET",
             headers: {
@@ -82,7 +85,8 @@ class App extends Component {
             navigator.geolocation.getCurrentPosition(position => {
                 console.log(position.coords);
                 this.setState({
-                    latlong: 'point:' + position.coords.latitude + ',' + position.coords.longitude
+                    lat: position.coords.latitude,
+                    long: position.coords.longitude
                 });
             });
         } else {
@@ -95,12 +99,14 @@ class App extends Component {
     }
 
     render() {
+        let latlong = 'point:' + this.state.lat + ',' + this.state.long;
         return (
             <div className="App">
                 <LocationInput handleSubmit={this.onLocationSubmit} />
                 <p>Origin 1: {this.state.origin1.formatted_address}</p>
                 <p>Origin 2: {this.state.origin2.formatted_address}</p>
-                <p>Latlong: {this.state.latlong}</p>
+                <p>Latlong: {latlong}</p>
+                <MapContainer />
             </div>
         );
     }
