@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
-import { Map, GoogleApiWrapper, InfoWindow, Marker} from 'google-maps-react';
+import { Map, GoogleApiWrapper, InfoWindow, Marker } from 'google-maps-react';
+import CurrentLocation from './Map';
 
 const mapStyles = {
-  width: '100%',
-  height: '100%'
+  width: '600px',
+  height: '600px'
 };
 
 export class MapContainer extends Component {
@@ -31,19 +32,19 @@ export class MapContainer extends Component {
 
     render() {
         return (
-            <Map
+            <CurrentLocation
+                centerAroundCurrentLocation
                 google={this.props.google}
-                zoom={14}
-                style={mapStyles}
-                initialCenter={{
-                    lat: 41.3229056,
-                    lng: -73.0988544
-                }}
+                initialCenter={this.props.center}
             >
-                <Marker
-                    onClick={this.onMarkerClick}
-                    name={'My house'}
-                />
+                {this.props.data.map(item => (
+                    <Marker
+                        title={item.name}
+                        name={item.name}
+                        position={{ lat: item.lat, lng: item.lng }}
+                        onClick={this.onMarkerClick}
+                    />
+                ))}
                 <InfoWindow
                     marker={this.state.activeMarker}
                     visible={this.state.showingInfoWindow}
@@ -53,7 +54,7 @@ export class MapContainer extends Component {
                         <h4>{this.state.selectedPlace.name}</h4>
                     </div>
                 </InfoWindow>
-            </Map>
+            </CurrentLocation>
         );
     }
 }

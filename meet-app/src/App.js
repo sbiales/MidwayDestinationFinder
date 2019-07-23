@@ -21,15 +21,22 @@ class App extends Component {
                 placeid: '',
                 name: ''
             },
-            lat: '',
-            long: ''
+            browser: {
+                lat: '41.3229056',
+                lng: '-73.0988544'
+            },
+            currentLocation: {
+                lat: '41.3229056',
+                lng: '-73.0988544'
+            },
+            data: []
         };
         this.onLocationSubmit = this.onLocationSubmit.bind(this);
     }
 
     onLocationSubmit(q1, q2) {
         var o1, o2;
-        var latlong = (this.state.lat && this.state.long) ? 'point:' + this.state.lat + ',' + this.state.long : '';
+        var latlong = 'point:' + this.state.browser.lat + ',' + this.state.browser.lng;
         var url = 'http://127.0.0.1:5000/findLocation?query=' +
             q1 + '&latlong=' + latlong;
         fetch(url, {
@@ -76,6 +83,8 @@ class App extends Component {
                         name: o2.name
                     }
                 }));
+                var midpt = [(this.state.origin1.lat + this.state.origin2.lat) / 2, (this.state.origin1.lng + this.state.origin2.lng) / 2];
+                this.setState({currentLocation: {lat: midpt[0], lng: midpt[1]}});
             });
         });
     }
@@ -85,8 +94,10 @@ class App extends Component {
             navigator.geolocation.getCurrentPosition(position => {
                 console.log(position.coords);
                 this.setState({
-                    lat: position.coords.latitude,
-                    long: position.coords.longitude
+                    browser: {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    }  
                 });
             });
         } else {
@@ -99,14 +110,15 @@ class App extends Component {
     }
 
     render() {
-        let latlong = 'point:' + this.state.lat + ',' + this.state.long;
+        let latlong = 'point:' + this.state.browser.lat + ',' + this.state.browser.lng;
+        let testData = [this.state.origin1, this.state.origin2];
         return (
             <div className="App">
                 <LocationInput handleSubmit={this.onLocationSubmit} />
                 <p>Origin 1: {this.state.origin1.formatted_address}</p>
                 <p>Origin 2: {this.state.origin2.formatted_address}</p>
                 <p>Latlong: {latlong}</p>
-                <MapContainer />
+                <MapContainer center={this.state.currentLocation} data={testData} />
             </div>
         );
     }
